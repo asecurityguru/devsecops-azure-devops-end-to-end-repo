@@ -67,7 +67,6 @@
 		</dependency>
 
 <!--#Change 1 for SAST - Changes for Unit Test Coverage Percentage Update on SonarCloud Dashboard
-#By ASecurityGuru
 #Default Location of CodeCoverage File is target/site/jacoco/jacoco.xml,target/site/jacoco-it/jacoco.xml,build/reports/jacoco/test/jacocoTestReport.xml
 -->
         <dependency>
@@ -81,7 +80,6 @@
 	<build>
 	<plugins>
 <!--#Change 2 for SAST - Added Jacoco Plugin - Changes for Unit Test Coverage Percentage Update on SonarCloud Dashboard
-#By ASecurityGuru
 #Default Location of CodeCoverage File is target/site/jacoco/jacoco.xml,target/site/jacoco-it/jacoco.xml,build/reports/jacoco/test/jacocoTestReport.xml
 -->		<plugin>
 			<groupId>org.jacoco</groupId>
@@ -107,7 +105,17 @@
 			</execution>
 			</executions>
 		</plugin>
-
+<!--# Changes for Software Composition Analysis Scan using Snyk-->
+    <plugin>
+      <groupId>io.snyk</groupId>
+      <artifactId>snyk-maven-plugin</artifactId>
+      <version>2.0.0</version>
+      <inherited>false</inherited>
+      <configuration>
+        <org>asecurityguru</org>
+      </configuration>
+    </plugin>
+<!-- Snyk Changes for SCA Ends Here -->
 
 		<plugin>
 			<groupId>org.springframework.boot</groupId>
