@@ -11,25 +11,34 @@ variables:
 - name: sonar_token
   value: $[variables.SONARTOKEN]
 
-steps:
-- script: |
-    mvn verify package sonar:sonar -Dsonar.host.url=https://sonarcloud.io/ -Dsonar.organization=azuredevopsdevsecopsorg -Dsonar.projectKey=azuredevopsdevsecopsprojectkey -Dsonar.login=$(sonar_token)
-  displayName: "Integrate SAST using SonarCloud to populate code coverage and secure pipeline variable in Azure DevOps DevSecOps Pipeline"
+jobs:
+- job: Sonar_SAST_Scan_Job
+  container: maven:3.8.1-openjdk-17-slim
+  steps:
+  - script: |
+      mvn verify package sonar:sonar -Dsonar.host.url=https://sonarcloud.io/ -Dsonar.organization=azuredevopsdevsecopsoorg -Dsonar.projectKey=azuredevsecopsoprojectkey -Dsonar.token=$(sonar_token)
+    displayName: "Integrate SAST using SonarCloud to populate code coverage and secure pipeline variable in Azure DevOps DevSecOps Pipeline"
 
-- script: |
-    SNYK_TOKEN=$(snyk_token)
-    export SNYK_TOKEN
-    mvn snyk:test -fn 
-  displayName: "Integrate SCA scan using Snyk in ADO DevSecOps Pipeline"
+- job: Snyk_SCA_Scan_Job
+  dependsOn: Sonar_SAST_Scan_Job
+  steps:
+  - script: |
+      SNYK_TOKEN=$(snyk_token)
+      export SNYK_TOKEN
+      mvn snyk:test -fn 
+    displayName: "Integrate SCA scan using Snyk in ADO DevSecOps Pipeline"
 
-- script: |
-      wget https://github.com/zaproxy/zaproxy/releases/download/v2.11.1/ZAP_2.11.1_Linux.tar.gz
-      tar -xvf ZAP_2.11.1_Linux.tar.gz
-      cd ZAP_2.11.1
+- job: ZAP_DAST_Scan_Job
+  dependsOn: Snyk_SCA_Scan_Job
+  steps:
+  - script: |
+      wget https://github.com/zaproxy/zaproxy/releases/download/v2.14.0/ZAP_2.14.0_Linux.tar.gz
+      tar -xvf ZAP_2.14.0_Linux.tar.gz
+      cd ZAP_2.14.0
       ./zap.sh -cmd -quickurl https://www.example.com -quickprogress -quickout /home/vsts/work/1/a/zap_report.html 
-  displayName: "Integrate DAST using OWASP ZAP in ADO DevSecOps Pipeline"
+    displayName: "Integrate DAST using OWASP ZAP in ADO DevSecOps Pipeline"
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathToPublish: '$(Build.ArtifactStagingDirectory)'
-    artifactName: zap_report.html
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: '$(Build.ArtifactStagingDirectory)'
+      artifactName: zap_report.html
